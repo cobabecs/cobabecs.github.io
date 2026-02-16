@@ -5,19 +5,19 @@
 <title>Normal Distribution Visualizer</title>
 
 <style>
-body {
-    font-family: Arial;
-    text-align: center;
-    background:#eee;
+body{
+font-family:Arial;
+text-align:center;
+background:#eee;
 }
 
-canvas {
-    background:white;
-    border:1px solid black;
+canvas{
+background:white;
+border:1px solid black;
 }
 
-.controls {
-    margin:10px;
+.controls{
+margin:10px;
 }
 </style>
 </head>
@@ -27,8 +27,10 @@ canvas {
 <h2>Normal Distribution Visualizer</h2>
 
 <div class="controls">
-Mean: <input id="mean" type="number" value="12" step="0.1">
-Std Dev: <input id="std" type="number" value="2" step="0.1">
+Mean:
+<input id="mean" type="number" value="12" step="0.1">
+Std Dev:
+<input id="std" type="number" value="2" step="0.1">
 </div>
 
 <canvas id="graph" width="900" height="400"></canvas>
@@ -45,12 +47,11 @@ Right Domain:
 <input id="rightSlider" type="range" min="0" max="1000" value="600">
 </div>
 
-<h3 id="prob">Probability:</h3>
+<h3 id="prob"></h3>
 
 <script>
 
-const canvas = document.getElementById("graph");
-const ctx = canvas.getContext("2d");
+const ctx = document.getElementById("graph").getContext("2d");
 
 let meanBox = document.getElementById("mean");
 let stdBox = document.getElementById("std");
@@ -60,12 +61,15 @@ let leftSlider = document.getElementById("leftSlider");
 let rightSlider = document.getElementById("rightSlider");
 let probText = document.getElementById("prob");
 
+const BASE = 350;
+const HEIGHT = 300;
+
 function pdf(x,m,s){
 return 1/(s*Math.sqrt(2*Math.PI))*Math.exp(-((x-m)**2)/(2*s*s));
 }
 
 function erf(x){
-let sign = x>=0?1:-1;
+let sign=x>=0?1:-1;
 x=Math.abs(x);
 let a1=0.254829592,a2=-0.284496736,a3=1.421413741,
 a4=-1.453152027,a5=1.061405429,p=0.3275911;
@@ -94,46 +98,106 @@ ctx.clearRect(0,0,900,400);
 
 let maxPdf=pdf(m,m,s);
 
+// ---------- CURVE ----------
 ctx.beginPath();
-
 for(let i=0;i<400;i++){
 let x=minX+(i/399)*(maxX-minX);
 let y=pdf(x,m,s);
 let sx=(x-minX)/(maxX-minX)*900;
-let sy=350-(y/maxPdf)*300;
-
+let sy=BASE-(y/maxPdf)*HEIGHT;
 if(i==0)ctx.moveTo(sx,sy);
 else ctx.lineTo(sx,sy);
 }
-
 ctx.stroke();
 
+// ---------- SHADED REGION ----------
 ctx.fillStyle="rgba(0,0,255,0.3)";
 ctx.beginPath();
+let started=false;
 
 for(let i=0;i<400;i++){
 let x=minX+(i/399)*(maxX-minX);
-if(x>=left&&x<=right){
+
+if(x>=left && x<=right){
+
 let y=pdf(x,m,s);
 let sx=(x-minX)/(maxX-minX)*900;
-let sy=350-(y/maxPdf)*300;
-if(i==0)ctx.moveTo(sx,350);
+let sy=BASE-(y/maxPdf)*HEIGHT;
+
+if(!started){
+ctx.moveTo(sx,BASE);
+ctx.lineTo(sx,sy);
+started=true;
+}else{
 ctx.lineTo(sx,sy);
 }
 }
-ctx.lineTo((right-minX)/(maxX-minX)*900,350);
+}
+
+let rightScreen=(right-minX)/(maxX-minX)*900;
+ctx.lineTo(rightScreen,BASE);
 ctx.closePath();
 ctx.fill();
 
+// ---------- AXIS ----------
+ctx.beginPath();
+ctx.moveTo(0,BASE);
+ctx.lineTo(900,BASE);
+ctx.stroke();
+
+// ---------- μ AND σ TICKS ----------
+ctx.textAlign="center";
+
+for(let i=-3;i<=3;i++){
+
+let x=m+i*s;
+let sx=(x-minX)/(maxX-minX)*900;
+
+ctx.beginPath();
+ctx.moveTo(sx,BASE);
+ctx.lineTo(sx,BASE+10);
+ctx.stroke();
+
+let label = i==0 ? "μ" : (i>0?"+":"")+i+"σ";
+ctx.fillText(label,sx,BASE+25);
+
+let val = x.toFixed(2);
+ctx.fillText(val,sx,BASE+40);
+}
+
+// ---------- PROBABILITY ----------
 let p=cdf(right,m,s)-cdf(left,m,s);
 probText.innerText="Probability: "+p.toFixed(4);
 
+// ---------- TEXTBOX UPDATE ----------
 leftBox.value=left.toFixed(2);
 rightBox.value=right.toFixed(2);
+
 }
 
+// -------- SLIDER EVENTS --------
 leftSlider.oninput=redraw;
 rightSlider.oninput=redraw;
+
+// -------- ENTER / BLUR TEXTBOX --------
+leftBox.onchange=()=>{
+let m=parseFloat(meanBox.value);
+let s=parseFloat(stdBox.value);
+let minX=m-4*s;
+let maxX=m+4*s;
+leftSlider.value=(leftBox.value-minX)/(maxX-minX)*1000;
+redraw();
+};
+
+rightBox.onchange=()=>{
+let m=parseFloat(meanBox.value);
+let s=parseFloat(stdBox.value);
+let minX=m-4*s;
+let maxX=m+4*s;
+rightSlider.value=(rightBox.value-minX)/(maxX-minX)*1000;
+redraw();
+};
+
 meanBox.onchange=redraw;
 stdBox.onchange=redraw;
 
@@ -143,3 +207,4 @@ redraw();
 
 </body>
 </html>
+
