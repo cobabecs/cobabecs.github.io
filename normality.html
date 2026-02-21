@@ -86,8 +86,8 @@ let leftSlider = document.getElementById("leftSlider");
 let rightSlider = document.getElementById("rightSlider");
 let probText = document.getElementById("prob");
 
-const BASE = 350;
-const HEIGHT = 300;
+// const BASE = 350;
+// const HEIGHT = 300;
 
 function pdf(x,m,s){
 return 1/(s*Math.sqrt(2*Math.PI))*Math.exp(-((x-m)**2)/(2*s*s));
@@ -108,7 +108,10 @@ return 0.5*(1+erf((x-m)/(s*Math.sqrt(2))));
 }
 
 function redraw(){
-
+  
+let BASE = canvas.height * 0.80;     // x-axis location
+let HEIGHT = canvas.height * 0.65;   // curve height
+  
 let m=parseFloat(meanBox.value);
 let s=parseFloat(stdBox.value);
 if(s<=0)return;
@@ -119,7 +122,7 @@ let maxX=m+4*s;
 let left=minX+(leftSlider.value/1000)*(maxX-minX);
 let right=minX+(rightSlider.value/1000)*(maxX-minX);
 
-ctx.clearRect(0,0,canvas.width,400);
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
 let maxPdf=pdf(m,m,s);
 
